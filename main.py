@@ -51,7 +51,11 @@ tags_metadata = [
     'description': 'mining', 
 
     'name': 'nodes',
-    'description': 'adding nodes and replacing the chain'
+    'description': 'adding nodes and replacing the chain',
+
+
+    'name': 'contracts',
+    'description': 'smart contracts on the blockchain'
     }]
 
 # CONSTANTS
@@ -89,6 +93,14 @@ class Transaction(BaseModel):
     amount: float
 
 
+class Contract(BaseModel):
+    sender_public_send_key: str
+    sender_private_send_key: str
+    sender_view_key: str
+    receiver: str
+    contractbinary: bytes
+
+
 class Walletkey(BaseModel):
     publickey: str
     privatekey: str
@@ -121,6 +133,22 @@ class EncryptedTransaction(BaseModel):
 async def index():
     """ returns index page """ 
     return "see /docs for the api"
+
+
+@app.get('/add_contract', tags=['contracts'])
+async def addContract(contractTransaction: Contract):
+    """ Use this to add smart contracts """
+    senderPublicKey = contractTransaction.sender_public_send_key
+    senderPrivateKey = contractTransaction.sender_private_send_key
+    receiver = contractTransaction.receiver
+    senderViewKey = contractTransaction.sender_view_key
+    contractdata = contractTransaction.contractbinary
+    contract = blockchain.add_smartContract(senderprivatekey= senderPrivateKey,
+            sendersendpublickey= senderPublicKey,
+            senderviewkey= senderViewKey,
+            receiver= receiver,
+            compiledcontract=contractdata)
+    return {'message': contract}
 
 
 @app.get("/get_the_chain", tags=['information'])

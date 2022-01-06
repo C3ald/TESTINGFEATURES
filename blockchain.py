@@ -2,6 +2,7 @@ import hashlib
 import datetime
 import time
 import json
+from types import TracebackType
 from urllib.parse import urlparse
 from uuid import uuid1, uuid4
 import requests as r
@@ -48,6 +49,24 @@ class Blockchain:
             self.transactions = ["How's our data?"]
             self.create_block(proof = 1, previous_hash="0", forger='Network') #helps with block creation
         self.replace_chain()
+
+
+
+    def add_smartContract(self, senderprivatekey:str, senderviewkey:str, sendersendpublickey, receiver, compiledcontract):
+        """ This is used to add transactions so they can be verified """
+        # addressofsender = primary_addresses().make_primary_address(senderviewkey)
+        # signature = self.signTransaction(addressofsender, receiver)
+        # signatureofsender = signature['signature of sender']
+        # signatureofreceiver = signature['signature of receiver']
+        unconfirmedTransaction = {'sender send publickey':sendersendpublickey, 'sender send privatekey': senderprivatekey, 'sender address': senderviewkey, 'receiver': receiver,'amount':algs.fee,'id': uuid1(),'timestamp': time.time(), 'type':'Contract', 'contract': compiledcontract}
+        verify = self.doubleSpendCheck(unconfirmedTransaction)
+        if verify == False:
+            self.unconfirmed_transactions.append(unconfirmedTransaction)
+        # self.unconfirmed_transactions = set(self.unconfirmed_transactions)
+        # self.add_unconfirmed_transaction = list(self.unconfirmed_transactions)
+        return unconfirmedTransaction
+
+
 
 
 
@@ -270,7 +289,7 @@ class Blockchain:
         transaction = self.signTransaction(transactionforsigning)
         signsender = transaction
         # signreceiver = transaction['signature of receiver']
-        minertransaction = {'sender': senders,'amount': amount, 'receiver':receivers, 'sender signature': signsender, 'id': transactionID, 'timestamp': timestamp}
+        minertransaction = {'sender': senders,'amount': amount, 'receiver':receivers, 'sender signature': signsender, 'id': transactionID, 'timestamp': timestamp, 'type': 'Transaction'}
         self.transactions.append(minertransaction)
         previous_block = self.get_prev_block()
         return previous_block['index'] + 1
@@ -394,7 +413,7 @@ class Blockchain:
         # signature = self.signTransaction(addressofsender, receiver)
         # signatureofsender = signature['signature of sender']
         # signatureofreceiver = signature['signature of receiver']
-        unconfirmedTransaction = {'sender send publickey':sendersendpublickey, 'sender send privatekey': senderprivatekey, 'sender address': senderviewkey, 'receiver': receiver,'amount': amount,'id': uuid1(),'timestamp': time.time()}
+        unconfirmedTransaction = {'sender send publickey':sendersendpublickey, 'sender send privatekey': senderprivatekey, 'sender address': senderviewkey, 'receiver': receiver,'amount': amount,'id': uuid1(),'timestamp': time.time(), 'type': 'Transaction'}
         verify = self.doubleSpendCheck(unconfirmedTransaction)
         if verify == False:
             self.unconfirmed_transactions.append(unconfirmedTransaction)
@@ -432,6 +451,11 @@ class Blockchain:
         amount = transaction['amount']
         transactionID = transaction['id']
         timestamp = transaction['timestamp']
+        transactionType = transaction['type']
+        if transactionType == 'Contract':
+            Contract = transaction['contract']
+        else:
+            Contract = None
         if amount > 0:
             verify4 = True
         else:
@@ -447,7 +471,10 @@ class Blockchain:
             hashed_receiver = str(pbkdf2_sha256.hash(receiver))
             senderSign = self.signTransaction(transaction)
             # receiverSign = transaction['signature of receiver']
-            verifiedTransaction = {'sender': hashed_sender, 'amount': amount, 'receiver': hashed_receiver, 'sender signature': senderSign, 'id': transactionID, 'timestamp':timestamp}
+            if Contract == None:
+                verifiedTransaction = {'sender': hashed_sender, 'amount': amount, 'receiver': hashed_receiver, 'sender signature': senderSign, 'id': transactionID, 'timestamp':timestamp, 'type': 'Transaction'}
+            if TracebackType == "Contract":
+                verifiedTransaction = {'sender': hashed_sender, 'amount': amount, 'receiver': hashed_receiver, 'sender signature': senderSign, 'id': transactionID, 'timestamp':timestamp, 'type': 'Contract', 'contract': Contract}
             verify3 = self.doubleSpendCheck(verifiedTransaction)
             if verify3 == False:
                 return verifiedTransaction

@@ -2,5 +2,7 @@ The idea is to make it so code can run on nodes on some sort of virtual machine 
 Every smart contract is identified as a transaction and gets a unique id.
 The contract needs to be in a unique programming language and has to be compiled before deploying to prevent errors in the contract.
 Compiling the contract also allows the node to understand what the contract wants the node to do.
+The compiled contract should be in bytes to shorten the size and encode it
+To run the contract it would be decompiled and would be run on the node.
 
 This feature can be a big game-changer for Token if implemented properly.

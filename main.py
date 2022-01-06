@@ -93,6 +93,18 @@ class Transaction(BaseModel):
     amount: float
 
 
+
+class AddTransaction(BaseModel):
+    sender_public_send_key: str
+    sender_private_send_key: str
+    sender_view_key: str
+    receiver: str
+    transactionID: str
+    timestamp: str
+    amount: float
+    transactiontype: str
+
+
 class Contract(BaseModel):
     sender_public_send_key: str
     sender_private_send_key: str
@@ -194,19 +206,22 @@ async def is_valid():
 
 
 @app.post("/add_transaction/", tags=['transaction'])
-async def add_transaction(transaction: Transaction):
+async def add_transaction(transaction: AddTransaction):
     """ Allows transactions to be added to the chain from nodes"""
     senderpublicsendkey = transaction.sender_public_send_key
     senderprivatesendkey = transaction.sender_private_send_key
     senderviewkey = transaction.sender_view_key
     receiver = transaction.receiver
     amount = transaction.amount
-    new_transaction = blockchain.add_unconfirmed_transaction(senderprivatekey=senderprivatesendkey, 
-    sendersendpublickey=senderpublicsendkey, 
-    receiver=receiver, 
-    senderviewkey=senderviewkey, 
-    amount=amount)
-    blockchain.broadcast_transaction(transaction=new_transaction)
+    transactionid = transaction.transactionID
+    new_transaction = blockchain.add_transaction(
+        senderprivatekey=senderprivatesendkey,
+        sendersendpublickey=senderpublicsendkey,
+        senderviewkey=senderviewkey,
+        receiver=receiver,
+        amount=amount,
+        transactionID=transactionid
+    )
     result = 'transaction has been added and is awaiting verification'
     return result
 
